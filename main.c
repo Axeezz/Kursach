@@ -14,7 +14,6 @@ int main() {
     while (1) {
         printf("\n");
         sfs_pwdm();
-        //printf("\nВведите команду (c, d, w, r, e, mkdir, rm, mv, ls, rmdir, cd, pwd): ");
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0; // Убираем символ новой строки
 

@@ -1,5 +1,37 @@
 #include "sfs.h"
 
+void create_home_directory() {
+    // Проверка существования /home
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (directory[i].inode_index != -1 &&
+            strcmp(directory[i].filename, "home") == 0) {
+            return;
+        }
+    }
+
+    // Создание /home
+    int home_inode = find_free_inode();
+    if (home_inode == -1) return;
+
+    inode_table[home_inode].is_used = 1;
+    inode_table[home_inode].is_directory = 1;
+    inode_table[home_inode].directory_inode_index = 0;
+    strncpy(inode_table[home_inode].filename, "home", MAX_FILENAME_LENGTH);
+
+    for (int i = 1; i < MAX_FILES; i++) {
+        if (directory[i].inode_index == -1) {
+            directory[i].inode_index = home_inode;
+            strncpy(directory[i].filename, "home", MAX_FILENAME_LENGTH);
+            break;
+        }
+    }
+
+    superblock.free_inodes--;
+    current_directory_inode = home_inode;
+    strncpy(current_directory, "/home", MAX_FILENAME_LENGTH);
+    printf("Директория /home создана.\n");
+}
+
 void sfs_cd(const char *dirname) {
     if (dirname == NULL || strlen(dirname) == 0) {
         printf("Ошибка: путь не указан.\n");

@@ -50,6 +50,7 @@ void sfs_pwdm();
 void sfs_pwd();
 void help();
 int is_valid_filesystem(FILE *f);
+void create_home_directory();
 long get_block_offset(int block_index);
 
 // Функции для файлов

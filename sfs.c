@@ -50,6 +50,8 @@ void sfs_mkfs(const char *diskname) {
     directory[0].inode_index = 0;
     strncpy(directory[0].filename, "/", MAX_FILENAME_LENGTH);
 
+    create_home_directory();
+
     // Write to disk
     fseek(disk, 0, SEEK_SET);
     fwrite(&superblock, sizeof(Superblock), 1, disk);
