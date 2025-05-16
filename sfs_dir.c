@@ -1,38 +1,5 @@
 #include "sfs.h"
 
-// Функции для работы с директориями
-void create_home_directory() {
-    // Проверка существования /home
-    for (int i = 0; i < MAX_FILES; i++) {
-        if (directory[i].inode_index != -1 &&
-            strcmp(directory[i].filename, "home") == 0) {
-            return;
-        }
-    }
-
-    // Создание /home
-    int home_inode = find_free_inode();
-    if (home_inode == -1) return;
-
-    inode_table[home_inode].is_used = 1;
-    inode_table[home_inode].is_directory = 1;
-    inode_table[home_inode].directory_inode_index = 0;
-    strncpy(inode_table[home_inode].filename, "home", MAX_FILENAME_LENGTH);
-
-    for (int i = 1; i < MAX_FILES; i++) {
-        if (directory[i].inode_index == -1) {
-            directory[i].inode_index = home_inode;
-            strncpy(directory[i].filename, "home", MAX_FILENAME_LENGTH);
-            break;
-        }
-    }
-
-    superblock.free_inodes--;
-    current_directory_inode = home_inode;
-    strncpy(current_directory, "/home", MAX_FILENAME_LENGTH);
-    printf("Директория /home создана.\n");
-}
-
 void sfs_cd(const char *dirname) {
     if (dirname == NULL || strlen(dirname) == 0) {
         printf("Ошибка: путь не указан.\n");
@@ -146,8 +113,7 @@ void sfs_create_dir(const char *dirname) {
     fwrite(directory, sizeof(DirectoryEntry), MAX_FILES, disk);
     fflush(disk);
 
-    printf("Директория '%s' успешно создана inode=%d parent=%d.\n",
-           dirname, inode_index, parent_inode);
+    printf("Директория '%s' успешно создана.\n", dirname);
 }
 
 void sfs_ls_dir(const char *dirname) {
@@ -310,7 +276,7 @@ int resolve_path_to_inode(const char *path, int *parent_inode_index, char *basen
     strncpy(temp_path, path, sizeof(temp_path));
     temp_path[sizeof(temp_path) - 1] = '\0';
 
-    printf("[DEBUG] resolve_path_to_inode: path = '%s'\n", temp_path);
+    //printf("[DEBUG] resolve_path_to_inode: path = '%s'\n", temp_path);
 
     char *token;
     char *rest = temp_path;
@@ -327,7 +293,7 @@ int resolve_path_to_inode(const char *path, int *parent_inode_index, char *basen
 
     // Разбираем путь по токенам
     while ((token = strtok_r(rest, "/", &rest))) {
-        printf("[DEBUG] token = '%s'\n", token);
+       // printf("[DEBUG] token = '%s'\n", token);
 
         // Пропускаем пустые токены и текущую директорию
         if (strlen(token) == 0 || strcmp(token, ".") == 0) {
@@ -359,7 +325,7 @@ int resolve_path_to_inode(const char *path, int *parent_inode_index, char *basen
         }
 
         if (!found) {
-            printf("[DEBUG] '%s' не найден в inode %d\n", token, current_inode);
+           // printf("[DEBUG] '%s' не найден в inode %d\n", token, current_inode);
             strncpy(basename, token, MAX_FILENAME_LENGTH);
             return -1;
         }
@@ -373,8 +339,8 @@ int resolve_path_to_inode(const char *path, int *parent_inode_index, char *basen
 
     // Сохраняем результат
     strncpy(basename, last_token, MAX_FILENAME_LENGTH);
-    printf("[DEBUG] Успешно: basename='%s', inode=%d, parent_inode=%d\n",
-           basename, current_inode, *parent_inode_index);
+    //printf("[DEBUG] Успешно: basename='%s', inode=%d, parent_inode=%d\n",
+     //      basename, current_inode, *parent_inode_index);
 
     return current_inode;
 }

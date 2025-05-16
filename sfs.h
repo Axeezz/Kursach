@@ -50,7 +50,7 @@ void sfs_pwdm();
 void sfs_pwd();
 void help();
 int is_valid_filesystem(FILE *f);
-int sfs_check_integrity();
+long get_block_offset(int block_index);
 
 // Функции для файлов
 void sfs_create(const char *filename);
@@ -59,7 +59,6 @@ void sfs_read(const char *filename);
 void sfs_delete(const char *filename);
 
 // Функции для директорий
-void create_home_directory();
 void sfs_cd(const char *dirname);
 void sfs_create_dir(const char *dirname);
 void sfs_ls_dir(const char *dirname);

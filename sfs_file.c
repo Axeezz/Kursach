@@ -83,17 +83,20 @@ void sfs_write(const char *filename, const char *data) {
             for (int j = 0; j < inode->block_count; j++) {
                 int block_size = (size - data_written > BLOCK_SIZE) ? BLOCK_SIZE : size - data_written;
 
-                fseek(disk, inode->blocks[j] * BLOCK_SIZE, SEEK_SET);
+                fseek(disk, get_block_offset(inode->blocks[j]), SEEK_SET);
                 fwrite(data + data_written, 1, block_size, disk);
 
                 data_written += block_size;
                 if (data_written == size) break;
             }
+            fflush(disk);
 
             inode->size = size;
 
             fseek(disk, sizeof(Superblock), SEEK_SET);
             fwrite(inode_table, sizeof(Inode), MAX_FILES, disk);
+
+            fflush(disk);
 
             printf("Данные в файл '%s' успешно записаны.\n", filename);
             return;
@@ -114,7 +117,7 @@ void sfs_read(const char *filename) {
             for (int j = 0; j < inode->block_count; j++) {
                 int block_size = (size - data_read > BLOCK_SIZE) ? BLOCK_SIZE : size - data_read;
 
-                fseek(disk, inode->blocks[j] * BLOCK_SIZE, SEEK_SET);
+                fseek(disk, get_block_offset(inode->blocks[j]), SEEK_SET);
                 fread(buffer + data_read, 1, block_size, disk);
 
                 data_read += block_size;

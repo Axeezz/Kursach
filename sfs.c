@@ -232,29 +232,6 @@ void sfs_pwdm() {
     printf("%s: ", current_directory);
 }
 
-int sfs_check_integrity() {
-    if (!disk) return 0;
-
-    // Проверяем корневую директорию
-    if (!inode_table[0].is_used || !inode_table[0].is_directory) {
-        printf("Ошибка целостности: повреждена корневая директория.\n");
-        return 0;
-    }
-
-    // Проверяем согласованность inode и directory
-    for (int i = 0; i < MAX_FILES; i++) {
-        if (directory[i].inode_index != -1) {
-            int inode_idx = directory[i].inode_index;
-            if (inode_idx < 0 || inode_idx >= MAX_FILES || !inode_table[inode_idx].is_used) {
-                printf("Ошибка целостности: несоответствие directory и inode таблицы.\n");
-                return 0;
-            }
-        }
-    }
-
-    return 1; // Все проверки пройдены
-}
-
 int is_valid_filesystem(FILE *f) {
     if (!f) return 0;
 
@@ -292,11 +269,18 @@ int is_valid_filesystem(FILE *f) {
     return 1;
 }
 
+long get_block_offset(int block_index) {
+    return sizeof(Superblock)
+           + sizeof(Inode) * MAX_FILES
+           + sizeof(DirectoryEntry) * MAX_FILES
+           + block_index * BLOCK_SIZE;
+}
+
 void help() {
-    printf("\n\n\nc <filename> - создание файла с именем filename\n");
+    printf("\n\n\nc <filename>            - создание файла с именем filename\n");
     printf("d <filename>            - удаление файла с именем filename\n");
     printf("w <filename>            - открытие файла с именем filename для записи\n");
-    printf("к <filename>            - чтение файла с именем filename\n");
+    printf("r <filename>            - чтение файла с именем filename\n");
     printf("mkdir <dirname>         - создание директории с именем dirname\n");
     printf("rmdir <dirname>         - удаление директории с именем dirname\n");
     printf("rm <dirname>            - рекурсивное удаление директории с именем dirname\n");
