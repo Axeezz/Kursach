@@ -32,11 +32,12 @@ void sfs_mkfs(const char *diskname) {
     superblock.total_inodes = MAX_FILES;
     superblock.free_inodes = MAX_FILES - 1;
     memset(superblock.block_bitmap, 0x00, sizeof(superblock.block_bitmap));
+    superblock.magic_number = 0x53465331; // "SFS1"
 
     // Initialize inodes and directory
     for (int i = 0; i < MAX_FILES; i++) {
         inode_table[i].is_used = 0;
-        inode_table[i].is_directory = 0;
+        inode_table[i].is_directory = 0;    memset(superblock.block_bitmap, 0x00, sizeof(superblock.block_bitmap));
         inode_table[i].directory_inode_index = -1;
         directory[i].inode_index = -1;
         memset(directory[i].filename, 0, MAX_FILENAME_LENGTH);
@@ -63,15 +64,15 @@ void sfs_mkfs(const char *diskname) {
 }
 
 void sfs_mount(const char *diskname) {
-    disk = fopen(diskname, "r+b");
+    disk = fopen(diskname, "rb+");///////
     if (!disk) {
         printf("Файл диска не существует. Создать новую файловую систему? (y/n): ");
         int answer = getchar();
-        while (getchar() != '\n'); // Clear input buffer
+        while (getchar() != '\n');
 
         if (answer == 'y' || answer == 'Y') {
             sfs_mkfs(diskname);
-            disk = fopen(diskname, "r+b");
+            disk = fopen(diskname, "rb+");/////////////////
             if (!disk) {
                 printf("Ошибка при создании файловой системы.\n");
                 return;
@@ -81,7 +82,7 @@ void sfs_mount(const char *diskname) {
         }
     }
 
-    // Check filesystem validity
+    // проверка валидности ФС
     if (!is_valid_filesystem(disk)) {
         printf("Файл не содержит валидной ФС. Инициализировать? (y/n): ");
         int answer = getchar();
@@ -89,8 +90,9 @@ void sfs_mount(const char *diskname) {
 
         if (answer == 'y' || answer == 'Y') {
             fclose(disk);
+            remove(diskname);
             sfs_mkfs(diskname);
-            disk = fopen(diskname, "r+b");
+            disk = fopen(diskname, "rb+");////////////////////////////////
             if (!disk) {
                 printf("Ошибка при создании файловой системы.\n");
                 return;
@@ -102,7 +104,6 @@ void sfs_mount(const char *diskname) {
         }
     }
 
-    // Read structures
     fseek(disk, 0, SEEK_SET);
     if (fread(&superblock, sizeof(Superblock), 1, disk) != 1) {
         printf("Ошибка чтения суперблока.\n");
@@ -127,11 +128,11 @@ void sfs_mount(const char *diskname) {
         return;
     }
 
-    // Set current directory
+    // установка текущей директории
     current_directory_inode = 0;
     strcpy(current_directory, "/");
 
-    // Try to find /home
+    // ищем /home
     for (int i = 0; i < MAX_FILES; i++) {
         if (directory[i].inode_index != -1 &&
             strcmp(directory[i].filename, "home") == 0 &&
@@ -147,7 +148,7 @@ void sfs_mount(const char *diskname) {
 
 void sfs_umount() {
     if (disk) {
-        // Save all changes
+
         fseek(disk, 0, SEEK_SET);
         fwrite(&superblock, sizeof(Superblock), 1, disk);
 
@@ -165,7 +166,6 @@ void sfs_umount() {
     }
 }
 
-// Вспомогательные функции
 int find_free_inode() {
     for (int i = 0; i < MAX_FILES; i++) {
         if (inode_table[i].is_used == 0) {
@@ -185,12 +185,12 @@ int find_free_block() {
 }
 
 void allocate_block(int block_index) {
-    superblock.block_bitmap[block_index / 8] &= ~(1 << (block_index % 8));
+    superblock.block_bitmap[block_index / 8] |= (1 << (block_index % 8));
     superblock.free_blocks--;
 }
 
 void free_block(int block_index) {
-    superblock.block_bitmap[block_index / 8] |= (1 << (block_index % 8));
+    superblock.block_bitmap[block_index / 8] &= ~(1 << (block_index % 8));
     superblock.free_blocks++;
 }
 
@@ -252,8 +252,11 @@ int is_valid_filesystem(FILE *f) {
         return 0;
     }
 
-    // Простые проверки (можно добавить magic number)
     if (sb.total_blocks != MAX_BLOCKS || sb.total_inodes != MAX_FILES) {
+        return 0;
+    }
+
+    if (sb.magic_number != 0x53465331) {
         return 0;
     }
 

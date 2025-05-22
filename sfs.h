@@ -6,7 +6,7 @@
 
 // Константы
 #define MAX_FILENAME_LENGTH 256
-#define MAX_BLOCKS 1024
+#define MAX_BLOCKS 2048
 #define MAX_FILES 128
 #define BLOCK_SIZE 4096
 
@@ -17,6 +17,7 @@ typedef struct {
     int total_inodes;
     int free_inodes;
     unsigned char block_bitmap[MAX_BLOCKS/8];
+    int magic_number;
 } Superblock;
 
 typedef struct {
@@ -55,7 +56,7 @@ long get_block_offset(int block_index);
 
 // Функции для файлов
 void sfs_create(const char *filename);
-void sfs_write(const char *filename, const char *data);
+void sfs_write(const char *filename);
 void sfs_read(const char *filename);
 void sfs_delete(const char *filename);
 
@@ -65,6 +66,7 @@ void sfs_create_dir(const char *dirname);
 void sfs_ls_dir(const char *dirname);
 void sfs_delete_dir(const char *dirname);
 void sfs_delete_dir_recursive(const char *dirname);
+void get_parent_path_and_name(const char *full_path, char *parent_path, char *name);
 
 // Вспомогательные функции
 int find_free_inode();

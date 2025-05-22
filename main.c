@@ -6,7 +6,6 @@
 int main() {
     const char *diskname = "virtual_disk.img";
     char command[256];
-    char data[BLOCK_SIZE];
 
     sfs_mkfs(diskname);
     sfs_mount(diskname);
@@ -17,8 +16,8 @@ int main() {
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0; // Убираем символ новой строки
 
-        char *cmd = strtok(command, " ");  // Получаем команду (например, c)
-        char *arg = strtok(NULL, " ");    // Получаем аргумент (например, kaka21)
+        char *cmd = strtok(command, " ");
+        char *arg = strtok(NULL, " ");
 
         if (cmd == NULL) {
             printf("Неверный формат команды.(Для справки - help)\n");
@@ -35,9 +34,7 @@ int main() {
         } else if (strcmp(cmd, "d") == 0) {
             sfs_delete(arg);
         } else if (strcmp(cmd, "w") == 0) {
-            printf("Введите данные для записи в файл '%s': ", arg);
-            fgets(data, sizeof(data), stdin);
-            sfs_write(arg, data);
+            sfs_write(arg);
         } else if (strcmp(cmd, "r") == 0) {
             sfs_read(arg);
         } else if (strcmp(cmd, "e") == 0) {
@@ -46,7 +43,6 @@ int main() {
         } else if (strcmp(cmd, "mkdir") == 0) {
             sfs_create_dir(arg);
         } else if (strcmp(cmd, "mv") == 0) {
-            //char *filename = strtok(NULL, " ");
             char *dirname = strtok(NULL, " ");
             sfs_move_to_dir(arg, dirname);
         } else if (strcmp(cmd, "ls") == 0) {
